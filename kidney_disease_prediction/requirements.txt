@@ -1,0 +1,18 @@
+Flask==2.3.3
+numpy==1.24.3
+pandas==2.0.3
+scikit-learn==1.3.0
+Pillow==10.0.0
+Werkzeug==2.3.7
+tensorflow==2.13.0
+
+# For PDF support (install one of these):
+# Option 1 - pdf2image (recommended, needs poppler):
+#   pip install pdf2image
+#   Windows: install poppler from https://github.com/oschwartz10612/poppler-windows/releases
+#   Linux: sudo apt install poppler-utils
+# Option 2 - PyMuPDF (no external deps):
+#   pip install PyMuPDF
+
+# For DICOM support:
+#   pip install pydicom

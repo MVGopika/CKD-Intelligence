@@ -1,0 +1,681 @@
+Project Guide: ML Framework for Early Detection of CKD Stages
+Project Overview
+This is an excellent research paper to replicate as a learning project. The paper develops a complete ML pipeline for CKD detection and staging using UK Biobank data. Here's a structured guide to help you implement this project:
+
+Phase 1: Understanding & Planning (Week 1-2)
+1.1 Study the Paper Thoroughly
+Read the paper 2-3 times to understand the complete workflow
+
+Identify the key components:
+
+Input features: SCr, SCysC, Age, Sex, BMI, Alb, HbA1c, SBP, DBP, CRP
+
+Target variables: eGFR (regression) and CKD stages 1-5 (classification)
+
+Three eGFR equations: CKD-EPI formulas for SCr, SCysC, and combined
+
+1.2 Create a Project Roadmap
+text
+Project Phases:
+├── Phase 1: Data Acquisition & Preprocessing
+├── Phase 2: Exploratory Data Analysis (EDA)
+├── Phase 3: eGFR Estimation (Regression)
+├── Phase 4: Hyperparameter Optimization with GWO
+├── Phase 5: CKD Stage Classification
+├── Phase 6: Model Explainability with SHAP
+└── Phase 7: Evaluation & Documentation
+Phase 2: Data Acquisition (Week 3-4)
+2.1 Access the UK Biobank Data
+Since you cannot directly access the UK Biobank data used in the paper:
+
+Option A: Apply for UK Biobank Access
+
+Visit UK Biobank Researcher Portal
+
+Submit application with project proposal
+
+Wait time: 3-6 months
+
+Option B: Use Alternative Datasets (Recommended for Learning)
+
+UCI CKD Dataset:
+
+python
+import pandas as pd
+url = "https://archive.ics.uci.edu/ml/machine-learning-databases/00533/chronic_kidney_disease_full.arff"
+# Convert ARFF to CSV or use scipy.io.arff
+Kaggle CKD Dataset:
+
+python
+# Download from Kaggle
+# https://www.kaggle.com/datasets/mansoordaku/ckdisease
+Synthea Generated Data:
+
+python
+# Generate synthetic patient data
+# Use Synthea to create realistic CKD patient records
+2.2 Data Requirements
+Minimum features needed:
+
+Serum Creatinine (SCr)
+
+Cystatin C (SCysC)
+
+Age
+
+Sex
+
+Blood pressure (SBP, DBP)
+
+BMI
+
+HbA1c
+
+Albumin
+
+CRP
+
+Phase 3: Implementation Setup (Week 5)
+3.1 Development Environment
+python
+# Create virtual environment
+python -m venv ckd_project
+source ckd_project/bin/activate  # On Windows: ckd_project\Scripts\activate
+
+# Install required packages
+pip install numpy pandas scikit-learn matplotlib seaborn
+pip install xgboost shap
+pip install scipy statsmodels
+pip install jupyter notebook
+3.2 Project Structure
+text
+ckd_project/
+├── data/
+│   ├── raw/
+│   └── processed/
+├── notebooks/
+│   ├── 01_eda.ipynb
+│   ├── 02_regression_models.ipynb
+│   ├── 03_gwo_optimization.ipynb
+│   ├── 04_classification_models.ipynb
+│   └── 05_shap_analysis.ipynb
+├── src/
+│   ├── data_preprocessing.py
+│   ├── eGFR_calculations.py
+│   ├── regression_models.py
+│   ├── gwo_optimizer.py
+│   ├── classification_models.py
+│   └── visualization.py
+├── models/
+│   └── saved_models/
+├── results/
+│   ├── figures/
+│   └── metrics/
+└── README.md
+Phase 4: Implementation Steps (Week 6-10)
+Step 1: Data Preprocessing
+python
+# src/data_preprocessing.py
+import pandas as pd
+import numpy as np
+from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.model_selection import train_test_split
+
+def load_and_preprocess_data(filepath):
+    # Load data
+    df = pd.read_csv(filepath)
+    
+    # Handle missing values
+    df = df.dropna()  # or use imputation
+    
+    # Encode categorical variables
+    le = LabelEncoder()
+    df['Sex_encoded'] = le.fit_transform(df['Sex'])
+    
+    # Feature scaling
+    scaler = StandardScaler()
+    numerical_features = ['Age', 'BMI', 'SCr', 'SCysC', 'HbA1c', 
+                         'CRP', 'Alb', 'SBP', 'DBP']
+    df_scaled = scaler.fit_transform(df[numerical_features])
+    
+    return df, scaler
+Step 2: Calculate eGFR using CKD-EPI Equations
+python
+# src/eGFR_calculations.py
+def calculate_eGFR_scr(scr, age, sex, ethnicity=1):
+    """
+    Calculate eGFR using CKD-EPI SCr equation (2021)
+    """
+    kappa = 0.7 if sex == 'female' else 0.9
+    alpha = -0.241 if sex == 'female' else -0.302
+    
+    scr_k = scr / kappa
+    min_part = np.minimum(scr_k, 1) ** alpha
+    max_part = np.maximum(scr_k, 1) ** -1.200
+    
+    egfr = 142 * min_part * max_part * (0.9938 ** age)
+    
+    if sex == 'female':
+        egfr *= 1.012
+    
+    return egfr
+
+def calculate_eGFR_cysc(cysc, age, sex):
+    """
+    Calculate eGFR using CKD-EPI SCysC equation
+    """
+    cysc_08 = cysc / 0.8
+    min_part = np.minimum(cysc_08, 1) ** -0.499
+    max_part = np.maximum(cysc_08, 1) ** -1.328
+    
+    egfr = 133 * min_part * max_part * (0.996 ** age)
+    
+    if sex == 'female':
+        egfr *= 0.932
+    
+    return egfr
+
+def calculate_eGFR_combined(scr, cysc, age, sex):
+    """
+    Calculate eGFR using combined CKD-EPI equation
+    """
+    kappa = 0.7 if sex == 'female' else 0.9
+    beta = -0.219 if sex == 'female' else -0.144
+    
+    scr_k = scr / kappa
+    min_scr = np.minimum(scr_k, 1) ** beta
+    max_scr = np.maximum(scr_k, 1) ** -0.544
+    
+    cysc_08 = cysc / 0.8
+    min_cysc = np.minimum(cysc_08, 1) ** -0.323
+    max_cysc = np.maximum(cysc_08, 1) ** -0.778
+    
+    egfr = 135 * min_scr * max_scr * min_cysc * max_cysc * (0.9961 ** age)
+    
+    if sex == 'female':
+        egfr *= 0.963
+    
+    return egfr
+
+def assign_ckd_stage(egfr):
+    """
+    Assign CKD stage based on eGFR value
+    """
+    if egfr >= 90:
+        return 1
+    elif egfr >= 60:
+        return 2
+    elif egfr >= 30:
+        return 3
+    elif egfr >= 15:
+        return 4
+    else:
+        return 5
+Step 3: Exploratory Data Analysis
+python
+# notebooks/01_eda.ipynb
+import matplotlib.pyplot as plt
+import seaborn as sns
+from scipy import stats
+
+def perform_eda(df):
+    # 1. Descriptive statistics
+    print(df.describe())
+    
+    # 2. Correlation matrix (Figure 3 from paper)
+    plt.figure(figsize=(12, 10))
+    correlation_matrix = df[['SCr', 'SCysC', 'Age', 'BMI', 'HbA1c', 
+                            'SBP', 'DBP', 'CRP', 'Alb']].corr()
+    sns.heatmap(correlation_matrix, annot=True, cmap='RdBu_r', 
+                center=0, vmin=-1, vmax=1)
+    plt.title('Correlation Matrix of Clinical Variables')
+    plt.tight_layout()
+    plt.savefig('../results/figures/correlation_matrix.png')
+    
+    # 3. eGFR distribution by stage (Figure 2 & 4)
+    fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+    
+    for i, (egfr_col, title) in enumerate(zip(
+        ['eGFR_SCr', 'eGFR_SCysC', 'eGFR_Combined'],
+        ['CKD-EPI SCr', 'CKD-EPI SCysC', 'CKD-EPI Combined']
+    )):
+        df.boxplot(column=egfr_col, by='CKD_Stage', ax=axes[i])
+        axes[i].set_title(title)
+        axes[i].set_ylabel('eGFR (mL/min/1.73m²)')
+    
+    plt.tight_layout()
+    plt.savefig('../results/figures/egfr_by_stage.png')
+    
+    # 4. Bland-Altman plots (Figure 7)
+    plot_bland_altman(df['eGFR_SCr'], df['eGFR_Combined'], 
+                      'CKD-EPI SCr vs Combined')
+Step 4: Regression Models for eGFR Estimation
+python
+# src/regression_models.py
+from sklearn.linear_model import LinearRegression
+from sklearn.svm import SVR
+from sklearn.metrics import mean_squared_error, r2_score
+import numpy as np
+
+def train_regression_models(X_train, y_train, X_test, y_test):
+    """
+    Train LR and SVR models for eGFR prediction
+    """
+    results = {}
+    
+    # Linear Regression
+    lr = LinearRegression()
+    lr.fit(X_train, y_train)
+    y_pred_lr = lr.predict(X_test)
+    
+    results['LR'] = {
+        'model': lr,
+        'RMSE': np.sqrt(mean_squared_error(y_test, y_pred_lr)),
+        'R2': r2_score(y_test, y_pred_lr),
+        'predictions': y_pred_lr
+    }
+    
+    # Support Vector Regression
+    svr = SVR(kernel='rbf')
+    svr.fit(X_train, y_train)
+    y_pred_svr = svr.predict(X_test)
+    
+    results['SVR'] = {
+        'model': svr,
+        'RMSE': np.sqrt(mean_squared_error(y_test, y_pred_svr)),
+        'R2': r2_score(y_test, y_pred_svr),
+        'predictions': y_pred_svr
+    }
+    
+    return results
+Step 5: Grey Wolf Optimizer Implementation
+python
+# src/gwo_optimizer.py
+import numpy as np
+
+class GreyWolfOptimizer:
+    """
+    Grey Wolf Optimizer for hyperparameter tuning
+    Based on the paper: Mirjalili et al. 2014
+    """
+    def __init__(self, objective_function, dim, lb, ub, 
+                 n_wolves=40, max_iter=3):
+        self.objective_function = objective_function
+        self.dim = dim
+        self.lb = np.array(lb)
+        self.ub = np.array(ub)
+        self.n_wolves = n_wolves
+        self.max_iter = max_iter
+        
+    def optimize(self):
+        # Initialize wolves
+        positions = np.random.uniform(
+            low=self.lb, high=self.ub, 
+            size=(self.n_wolves, self.dim)
+        )
+        
+        # Initialize alpha, beta, delta
+        alpha_pos = np.zeros(self.dim)
+        alpha_score = float('inf')
+        beta_pos = np.zeros(self.dim)
+        beta_score = float('inf')
+        delta_pos = np.zeros(self.dim)
+        delta_score = float('inf')
+        
+        # Main loop
+        for t in range(self.max_iter):
+            for i in range(self.n_wolves):
+                # Calculate fitness
+                fitness = self.objective_function(positions[i])
+                
+                # Update alpha, beta, delta
+                if fitness < alpha_score:
+                    delta_score = beta_score
+                    delta_pos = beta_pos.copy()
+                    beta_score = alpha_score
+                    beta_pos = alpha_pos.copy()
+                    alpha_score = fitness
+                    alpha_pos = positions[i].copy()
+                elif fitness < beta_score:
+                    delta_score = beta_score
+                    delta_pos = beta_pos.copy()
+                    beta_score = fitness
+                    beta_pos = positions[i].copy()
+                elif fitness < delta_score:
+                    delta_score = fitness
+                    delta_pos = positions[i].copy()
+            
+            # Update positions
+            a = 2 - t * (2 / self.max_iter)  # a decreases linearly
+            
+            for i in range(self.n_wolves):
+                for j in range(self.dim):
+                    r1, r2 = np.random.random(2)
+                    
+                    # Update alpha
+                    A1 = 2 * a * r1 - a
+                    C1 = 2 * r2
+                    D_alpha = abs(C1 * alpha_pos[j] - positions[i, j])
+                    X1 = alpha_pos[j] - A1 * D_alpha
+                    
+                    # Update beta
+                    r1, r2 = np.random.random(2)
+                    A2 = 2 * a * r1 - a
+                    C2 = 2 * r2
+                    D_beta = abs(C2 * beta_pos[j] - positions[i, j])
+                    X2 = beta_pos[j] - A2 * D_beta
+                    
+                    # Update delta
+                    r1, r2 = np.random.random(2)
+                    A3 = 2 * a * r1 - a
+                    C3 = 2 * r2
+                    D_delta = abs(C3 * delta_pos[j] - positions[i, j])
+                    X3 = delta_pos[j] - A3 * D_delta
+                    
+                    # Update position
+                    positions[i, j] = (X1 + X2 + X3) / 3
+                    
+                    # Boundary control
+                    positions[i, j] = np.clip(positions[i, j], 
+                                             self.lb[j], self.ub[j])
+        
+        return alpha_pos, alpha_score
+
+def optimize_svr_with_gwo(X_train, y_train, X_val, y_val):
+    """
+    Optimize SVR hyperparameters using GWO
+    """
+    def objective_function(params):
+        C, epsilon, gamma = params
+        
+        # Train SVR with these parameters
+        svr = SVR(C=C, epsilon=epsilon, gamma=gamma, kernel='rbf')
+        svr.fit(X_train, y_train)
+        
+        # Validate
+        y_pred = svr.predict(X_val)
+        rmse = np.sqrt(mean_squared_error(y_val, y_pred))
+        
+        return rmse
+    
+    # Parameter bounds: [C, epsilon, gamma]
+    lb = [0.1, 0.01, 0.001]
+    ub = [100, 1, 1]
+    
+    gwo = GreyWolfOptimizer(
+        objective_function=objective_function,
+        dim=3,
+        lb=lb,
+        ub=ub,
+        n_wolves=40,
+        max_iter=3
+    )
+    
+    best_params, best_score = gwo.optimize()
+    
+    return best_params, best_score
+Step 6: Classification Models
+python
+# src/classification_models.py
+from sklearn.svm import SVC
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+from xgboost import XGBClassifier
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+from sklearn.model_selection import StratifiedKFold, GridSearchCV
+from imblearn.over_sampling import SMOTE
+from imblearn.pipeline import Pipeline as ImbPipeline
+
+def train_classification_models(X_train, y_train, X_test, y_test):
+    """
+    Train and evaluate multiple classifiers for CKD staging
+    """
+    models = {
+        'SVM': SVC(kernel='poly', C=1, gamma=1, probability=True),
+        'Decision Tree': DecisionTreeClassifier(
+            criterion='entropy', max_depth=20, 
+            min_samples_split=2, min_samples_leaf=4
+        ),
+        'Random Forest': RandomForestClassifier(
+            criterion='entropy', n_estimators=100, 
+            max_depth=20, min_samples_split=2
+        ),
+        'XGBoost': XGBClassifier(
+            n_estimators=200, max_depth=20, 
+            learning_rate=0.2, subsample=0.8,
+            colsample_bytree=0.9, gamma=0.2
+        )
+    }
+    
+    results = {}
+    
+    for name, model in models.items():
+        # Create pipeline with SMOTE
+        pipeline = ImbPipeline([
+            ('smote', SMOTE(random_state=42)),
+            ('classifier', model)
+        ])
+        
+        # Cross-validation
+        skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+        cv_scores = []
+        
+        for train_idx, val_idx in skf.split(X_train, y_train):
+            X_tr, X_val = X_train[train_idx], X_train[val_idx]
+            y_tr, y_val = y_train[train_idx], y_train[val_idx]
+            
+            pipeline.fit(X_tr, y_tr)
+            y_pred = pipeline.predict(X_val)
+            cv_scores.append(f1_score(y_val, y_pred, average='weighted'))
+        
+        # Train on full training set
+        pipeline.fit(X_train, y_train)
+        
+        # Test
+        y_pred = pipeline.predict(X_test)
+        
+        results[name] = {
+            'model': pipeline,
+            'accuracy': accuracy_score(y_test, y_pred),
+            'precision': precision_score(y_test, y_pred, average='weighted'),
+            'recall': recall_score(y_test, y_pred, average='weighted'),
+            'f1_score': f1_score(y_test, y_pred, average='weighted'),
+            'cv_mean': np.mean(cv_scores),
+            'cv_std': np.std(cv_scores),
+            'predictions': y_pred
+        }
+        
+        print(f"{name} - Test F1: {results[name]['f1_score']:.4f}")
+    
+    return results
+Step 7: SHAP Analysis for Model Interpretability
+python
+# notebooks/05_shap_analysis.ipynb
+import shap
+import matplotlib.pyplot as plt
+
+def explain_with_shap(model, X_train, X_test, feature_names, output_dir):
+    """
+    Generate SHAP explanations for model predictions
+    """
+    # Create SHAP explainer
+    explainer = shap.TreeExplainer(model.named_steps['classifier'])
+    
+    # Calculate SHAP values
+    X_test_transformed = X_test  # SMOTE only applied during training
+    shap_values = explainer.shap_values(X_test_transformed)
+    
+    # 1. Global feature importance (Figure 9)
+    plt.figure(figsize=(10, 6))
+    shap.summary_plot(shap_values, X_test_transformed, 
+                     feature_names=feature_names, 
+                     show=False)
+    plt.tight_layout()
+    plt.savefig(f'{output_dir}/shap_summary.png')
+    
+    # 2. Force plot for individual predictions (Figure 10)
+    for i in range(5):  # Show 5 examples
+        plt.figure()
+        shap.force_plot(explainer.expected_value[i], 
+                       shap_values[i][0,:], 
+                       X_test_transformed[0,:],
+                       feature_names=feature_names,
+                       matplotlib=True,
+                       show=False)
+        plt.savefig(f'{output_dir}/force_plot_sample_{i}.png')
+    
+    # 3. Waterfall plot (Figure 11)
+    for i in range(5):
+        plt.figure()
+        shap.waterfall_plot(shap.Explanation(values=shap_values[i][0,:],
+                                            base_values=explainer.expected_value[i],
+                                            data=X_test_transformed[0,:],
+                                            feature_names=feature_names),
+                           show=False)
+        plt.savefig(f'{output_dir}/waterfall_plot_sample_{i}.png')
+    
+    return shap_values
+Step 8: Complete Pipeline
+python
+# main.py
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+import joblib
+
+from src.data_preprocessing import load_and_preprocess_data
+from src.eGFR_calculations import (calculate_eGFR_scr, calculate_eGFR_cysc,
+                                  calculate_eGFR_combined, assign_ckd_stage)
+from src.regression_models import train_regression_models
+from src.gwo_optimizer import optimize_svr_with_gwo
+from src.classification_models import train_classification_models
+
+def main():
+    # 1. Load and preprocess data
+    print("Loading data...")
+    df, scaler = load_and_preprocess_data('data/raw/ckd_data.csv')
+    
+    # 2. Calculate eGFR using three methods
+    print("Calculating eGFR...")
+    df['eGFR_SCr'] = df.apply(lambda row: calculate_eGFR_scr(
+        row['SCr'], row['Age'], row['Sex']), axis=1)
+    df['eGFR_SCysC'] = df.apply(lambda row: calculate_eGFR_cysc(
+        row['SCysC'], row['Age'], row['Sex']), axis=1)
+    df['eGFR_Combined'] = df.apply(lambda row: calculate_eGFR_combined(
+        row['SCr'], row['SCysC'], row['Age'], row['Sex']), axis=1)
+    
+    # 3. Assign CKD stages
+    df['CKD_Stage'] = df['eGFR_Combined'].apply(assign_ckd_stage)
+    
+    # 4. Prepare features for regression
+    feature_cols = ['Age', 'Sex_encoded', 'BMI', 'SCr', 'SCysC', 
+                    'HbA1c', 'CRP', 'Alb', 'SBP', 'DBP']
+    X = df[feature_cols].values
+    y_egfr = df['eGFR_Combined'].values
+    y_stage = df['CKD_Stage'].values
+    
+    # 5. Split data
+    X_train, X_test, y_train_egfr, y_test_egfr, y_train_stage, y_test_stage = train_test_split(
+        X, y_egfr, y_stage, test_size=0.3, random_state=42, stratify=y_stage
+    )
+    
+    # 6. Train regression models
+    print("\nTraining regression models...")
+    reg_results = train_regression_models(
+        X_train, y_train_egfr, X_test, y_test_egfr
+    )
+    
+    # 7. Optimize with GWO
+    print("\nOptimizing SVR with GWO...")
+    X_train_split, X_val, y_train_split, y_val = train_test_split(
+        X_train, y_train_egfr, test_size=0.2, random_state=42
+    )
+    
+    best_params, best_score = optimize_svr_with_gwo(
+        X_train_split, y_train_split, X_val, y_val
+    )
+    print(f"Best parameters: C={best_params[0]:.2f}, "
+          f"epsilon={best_params[1]:.2f}, gamma={best_params[2]:.2f}")
+    
+    # 8. Train classification models
+    print("\nTraining classification models...")
+    class_results = train_classification_models(
+        X_train, y_train_stage, X_test, y_test_stage
+    )
+    
+    # 9. Save best model
+    best_model = class_results['XGBoost']['model']
+    joblib.dump(best_model, 'models/best_ckd_classifier.pkl')
+    joblib.dump(scaler, 'models/scaler.pkl')
+    
+    # 10. Generate report
+    print("\n" + "="*50)
+    print("FINAL RESULTS")
+    print("="*50)
+    print("\nRegression Results (SVR-GWO):")
+    print(f"RMSE: {best_score:.2f}")
+    print(f"R²: {1 - best_score**2/np.var(y_test_egfr):.3f}")
+    
+    print("\nClassification Results:")
+    for model_name, metrics in class_results.items():
+        print(f"\n{model_name}:")
+        print(f"  Accuracy: {metrics['accuracy']:.4f}")
+        print(f"  F1-Score: {metrics['f1_score']:.4f}")
+    
+    return reg_results, class_results
+
+if __name__ == "__main__":
+    main()
+Phase 5: Expected Outcomes & Deliverables
+5.1 What You Should Produce
+Jupyter Notebooks with step-by-step implementation
+
+Python scripts for reusable functions
+
+Visualizations replicating paper's figures:
+
+Correlation matrix (Fig 3)
+
+eGFR distribution plots (Fig 2, 4, 6)
+
+Bland-Altman plots (Fig 7)
+
+Confusion matrix & ROC curves (Fig 8)
+
+SHAP plots (Fig 9, 10, 11)
+
+Model Performance Report:
+
+Regression metrics (RMSE, MAPE, R²)
+
+Classification metrics (Accuracy, Precision, Recall, F1)
+
+Comparison with paper's results
+
+5.2 Expected Results (if using similar data)
+Model	Accuracy	F1-Score
+SVM	~93-94%	~93-94%
+Decision Tree	~95%	~95%
+Random Forest	~96%	~96%
+XGBoost	~97-98%	~97-98%
+Phase 6: Extensions & Improvements
+Ideas to Go Beyond the Paper
+Deep Learning: Add CNN or LSTM models
+
+More Optimizers: Compare GWO with PSO, Genetic Algorithms
+
+Multi-modal Data: Add imaging data if available
+
+Time Series Analysis: If you have longitudinal data
+
+Web Application: Deploy model as a Flask/FastAPI app
+
+Mobile App: Create a simple CKD risk calculator
+
+Common Challenges & Solutions
+Challenge	Solution
+Cannot access UK Biobank	Use UCI/Kaggle datasets
+Class imbalance	Use SMOTE as shown in paper
+Missing values	Imputation (mean/median/KNN)
+Computational resources	Use smaller sample, cloud computing
+Replicating exact results	Focus on methodology, not exact numbers

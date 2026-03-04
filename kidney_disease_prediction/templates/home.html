@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block content %}
+<div style="background: linear-gradient(135deg, #e3f2fd, #e8f5e9); min-height: calc(100vh - 140px);">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="text-center mb-5">
+                    <h2 style="color:#1565c0; font-weight:700;">
+                        <i class="fas fa-heartbeat me-2 text-danger"></i>
+                        Chronic Kidney Disease Prediction System
+                    </h2>
+                    <p class="text-muted lead">Using Machine Learning Algorithms From Images and Features</p>
+                </div>
+                
+                <div class="row g-4">
+                    <!-- Features Based Card -->
+                    <div class="col-md-6">
+                        <div class="card h-100 border-0 shadow-lg" style="border-radius:16px; overflow:hidden;">
+                            <div style="background: linear-gradient(135deg, #1565c0, #42a5f5); padding:2rem; text-align:center;">
+                                <i class="fas fa-table" style="font-size:3rem; color:#fff;"></i>
+                                <h4 class="text-white mt-3">Features Based Prediction</h4>
+                            </div>
+                            <div class="card-body p-4">
+                                <p class="text-muted">
+                                    Input 24 clinical/lab features including age, blood pressure, serum creatinine, 
+                                    hemoglobin, and more. Our Random Forest ML model will predict CKD status.
+                                </p>
+                                <ul class="list-unstyled text-muted small mb-4">
+                                    <li><i class="fas fa-check text-success me-2"></i>24 clinical features</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>Random Forest classifier</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>88%+ accuracy</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>Instant results with recommendations</li>
+                                </ul>
+                                <a href="{{ url_for('features_based') }}" class="btn btn-primary w-100">
+                                    <i class="fas fa-stethoscope me-2"></i>Predict from Features
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Image Based Card -->
+                    <div class="col-md-6">
+                        <div class="card h-100 border-0 shadow-lg" style="border-radius:16px; overflow:hidden;">
+                            <div style="background: linear-gradient(135deg, #2e7d32, #66bb6a); padding:2rem; text-align:center;">
+                                <i class="fas fa-x-ray" style="font-size:3rem; color:#fff;"></i>
+                                <h4 class="text-white mt-3">Image Based Prediction</h4>
+                            </div>
+                            <div class="card-body p-4">
+                                <p class="text-muted">
+                                    Upload a CT scan or kidney ultrasound image. Our CNN deep learning model 
+                                    will classify the condition as Normal, Cyst, Tumor, or Stone.
+                                </p>
+                                <ul class="list-unstyled text-muted small mb-4">
+                                    <li><i class="fas fa-check text-success me-2"></i>CT scan / ultrasound images</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>CNN deep learning model</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>4-class classification</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>Medical recommendations</li>
+                                </ul>
+                                <a href="{{ url_for('image_based') }}" class="btn btn-success w-100">
+                                    <i class="fas fa-upload me-2"></i>Upload & Predict
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Info Section -->
+                <div class="mt-5 p-4 rounded-3" style="background:rgba(255,255,255,0.8);">
+                    <h5 style="color:#1565c0;"><i class="fas fa-info-circle me-2"></i>About Chronic Kidney Disease</h5>
+                    <p class="text-muted mb-0">
+                        Chronic Kidney Disease (CKD) affects millions worldwide and is often asymptomatic in early stages. 
+                        Early detection through lab markers and imaging is critical for effective management. 
+                        This system uses machine learning to assist healthcare professionals in early diagnosis.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

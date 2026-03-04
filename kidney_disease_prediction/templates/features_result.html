@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block content %}
+<div style="background: linear-gradient(135deg, #e3f2fd, #e8f5e9); min-height: calc(100vh - 140px); padding: 3rem 0;">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="result-card">
+                    <h3 class="text-center mb-4" style="color:#1565c0;">
+                        <i class="fas fa-chart-bar me-2"></i>Disease Prediction output
+                    </h3>
+                    
+                    <!-- Result Badge -->
+                    <div class="text-center mb-4">
+                        {% if prediction == 'ckd' %}
+                        <div class="mb-3">
+                            <img src="https://via.placeholder.com/200x150/c62828/ffffff?text=CKD+Detected" 
+                                 class="rounded shadow" style="max-height:150px;"
+                                 onerror="this.style.display='none'">
+                        </div>
+                        <span class="badge badge-ckd text-white">
+                            <i class="fas fa-exclamation-triangle me-2"></i>CKD Detected
+                        </span>
+                        {% else %}
+                        <span class="badge badge-normal text-white">
+                            <i class="fas fa-check-circle me-2"></i>Not CKD (Normal)
+                        </span>
+                        {% endif %}
+                        
+                        <div class="mt-3">
+                            <strong>Confidence:</strong>
+                            <div class="progress mt-2" style="height:20px;">
+                                <div class="progress-bar {% if prediction == 'ckd' %}bg-danger{% else %}bg-success{% endif %}"
+                                     style="width: {{ confidence }}%;">
+                                    {{ confidence }}%
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Recommendations -->
+                    <div class="p-4 rounded-3 mb-4" style="background: {% if prediction == 'ckd' %}#ffebee{% else %}#e8f5e9{% endif %}; border-left: 5px solid {% if prediction == 'ckd' %}#c62828{% else %}#2e7d32{% endif %};">
+                        <h5><i class="fas fa-notes-medical me-2"></i>Recommendations:</h5>
+                        <p class="mb-0">{{ recommendation }}</p>
+                    </div>
+                    
+                    <!-- Input Summary -->
+                    {% if input_values %}
+                    <div class="p-3 rounded-3" style="background:#f5f5f5;">
+                        <h6 class="text-muted"><i class="fas fa-table me-2"></i>Input Features Summary</h6>
+                        <div class="row row-cols-4 g-2 small">
+                            {% set labels = ['Age','BP','SG','AL','SU','RBC','PC','PCC','BA','BGR','BU','SC','SOD','POT','HEMO','PCV','WC','RC','HTN','DM','CAD','APPET','PE','ANE'] %}
+                            {% for i in range(input_values|length) %}
+                            <div class="col">
+                                <span class="badge bg-secondary">{{ labels[i] if i < labels|length else i }}: {{ input_values[i] }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="text-center mt-4">
+                        <a href="{{ url_for('features_based') }}" class="btn btn-outline-primary me-3">
+                            <i class="fas fa-redo me-2"></i>New Prediction
+                        </a>
+                        <a href="{{ url_for('home') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-home me-2"></i>Home
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

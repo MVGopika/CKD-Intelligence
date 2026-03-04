@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="hero-section" style="background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); min-height: calc(100vh - 140px);">
+    <div class="container" style="position:relative; z-index:1;">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card-glass">
+                    <h3 class="text-center mb-4">
+                        <i class="fas fa-clipboard-list me-2" style="color:#4fc3f7;"></i>
+                        features based input form
+                    </h3>
+                    
+                    <!-- Quick Input -->
+                    <form method="POST" action="{{ url_for('predict_features') }}" id="quickForm">
+                        <div class="mb-3">
+                            <label class="form-label" style="color:#90caf9;">
+                                <i class="fas fa-keyboard me-1"></i> Quick Input (space/comma separated, 24 values):
+                            </label>
+                            <input type="text" name="features" class="form-control form-control-lg"
+                                   placeholder="e.g.: 48 80 1.020 1 0 normal normal notpresent notpresent 121 36 1.2 137.5 4.4 15.4 44 7800 5.2 yes yes no good no no"
+                                   id="featuresInput">
+                            <small class="text-muted" style="color:#78909c !important;">
+                                Order: age bp sg al su rbc pc pcc ba bgr bu sc sod pot hemo pcv wc rc htn dm cad appet pe ane
+                            </small>
+                        </div>
+                        <button type="submit" class="btn-submit mb-4">
+                            <i class="fas fa-brain me-2"></i>Submit & Predict
+                        </button>
+                    </form>
+                    
+                    <hr style="border-color: rgba(255,255,255,0.2);">
+                    
+                    <!-- Detailed Form -->
+                    <h5 class="mb-3" style="color:#4fc3f7;">
+                        <i class="fas fa-list-alt me-2"></i>Or fill individual fields:
+                    </h5>
+                    <form method="POST" action="{{ url_for('predict_features') }}" id="detailForm">
+                        <div class="row g-3">
+                            <!-- Numeric Fields -->
+                            {% set num_fields = [
+                                ('age', 'Age (years)', '48', 'number'),
+                                ('bp', 'Blood Pressure (mm/Hg)', '80', 'number'),
+                                ('sg', 'Specific Gravity', '1.020', 'text'),
+                                ('al', 'Albumin (0-5)', '1', 'number'),
+                                ('su', 'Sugar (0-5)', '0', 'number'),
+                                ('bgr', 'Blood Glucose Random (mg/dL)', '121', 'number'),
+                                ('bu', 'Blood Urea (mg/dL)', '36', 'number'),
+                                ('sc', 'Serum Creatinine (mg/dL)', '1.2', 'text'),
+                                ('sod', 'Sodium (mEq/L)', '137', 'number'),
+                                ('pot', 'Potassium (mEq/L)', '4.4', 'text'),
+                                ('hemo', 'Hemoglobin (g)', '15.4', 'text'),
+                                ('pcv', 'Packed Cell Volume', '44', 'number'),
+                                ('wc', 'White Blood Cell Count', '7800', 'number'),
+                                ('rc', 'Red Blood Cell Count (millions)', '5.2', 'text'),
+                            ] %}
+                            {% for name, label, placeholder, type in num_fields %}
+                            <div class="col-md-4">
+                                <label class="form-label small" style="color:#b0bec5;">{{ label }}</label>
+                                <input type="{{ type }}" name="{{ name }}" class="form-control form-control-sm"
+                                       placeholder="{{ placeholder }}" step="any">
+                            </div>
+                            {% endfor %}
+                            
+                            <!-- Categorical Fields -->
+                            {% set cat_fields = [
+                                ('rbc', 'Red Blood Cells', ['normal','abnormal']),
+                                ('pc', 'Pus Cells', ['normal','abnormal']),
+                                ('pcc', 'Pus Cell Clumps', ['notpresent','present']),
+                                ('ba', 'Bacteria', ['notpresent','present']),
+                                ('htn', 'Hypertension', ['no','yes']),
+                                ('dm', 'Diabetes Mellitus', ['no','yes']),
+                                ('cad', 'Coronary Artery Disease', ['no','yes']),
+                                ('appet', 'Appetite', ['good','poor']),
+                                ('pe', 'Pedal Edema', ['no','yes']),
+                                ('ane', 'Anemia', ['no','yes']),
+                            ] %}
+                            {% for name, label, options in cat_fields %}
+                            <div class="col-md-4">
+                                <label class="form-label small" style="color:#b0bec5;">{{ label }}</label>
+                                <select name="{{ name }}" class="form-select form-select-sm">
+                                    {% for opt in options %}
+                                    <option value="{{ opt }}">{{ opt }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <input type="hidden" name="features" id="combinedFeatures">
+                        <button type="button" class="btn-submit mt-4" onclick="combineAndSubmit()">
+                            <i class="fas fa-brain me-2"></i>Predict from Form
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function combineAndSubmit() {
+    const fields = ['age','bp','sg','al','su','rbc','pc','pcc','ba','bgr',
+                    'bu','sc','sod','pot','hemo','pcv','wc','rc',
+                    'htn','dm','cad','appet','pe','ane'];
+    const form = document.getElementById('detailForm');
+    let values = [];
+    fields.forEach(f => {
+        const el = form.querySelector('[name="' + f + '"]');
+        values.push(el ? el.value : '0');
+    });
+    document.getElementById('combinedFeatures').value = values.join(' ');
+    form.submit();
+}
+</script>
+{% endblock %}

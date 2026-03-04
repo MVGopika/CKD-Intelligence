@@ -1,0 +1,657 @@
+{% extends 'base.html' %} {% block content %}
+<style>
+  .category-card {
+    border-radius: 12px;
+    overflow: hidden;
+    transition:
+      transform 0.2s,
+      box-shadow 0.2s;
+    border: 3px solid transparent;
+  }
+  .category-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  }
+  .category-card.normal {
+    border-color: #2e7d32;
+  }
+  .category-card.cyst {
+    border-color: #f57f17;
+  }
+  .category-card.tumor {
+    border-color: #c62828;
+  }
+  .category-card.stone {
+    border-color: #1565c0;
+  }
+
+  .cat-header-normal {
+    background: #2e7d32;
+  }
+  .cat-header-cyst {
+    background: #f57f17;
+  }
+  .cat-header-tumor {
+    background: #c62828;
+  }
+  .cat-header-stone {
+    background: #1565c0;
+  }
+
+  .ct-img-box {
+    width: 100%;
+    height: 100px;
+    background: #111;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.6rem;
+  }
+  .upload-zone {
+    border: 2.5px dashed #81c784;
+    border-radius: 14px;
+    padding: 26px 16px;
+    cursor: pointer;
+    transition:
+      background 0.2s,
+      border-color 0.2s;
+    background: rgba(255, 255, 255, 0.05);
+  }
+  .upload-zone:hover {
+    background: rgba(129, 199, 132, 0.1);
+  }
+  .upload-zone.dragover {
+    background: rgba(129, 199, 132, 0.22);
+    border-color: #fff;
+  }
+
+  .valid-msg {
+    color: #81c784;
+    font-size: 0.82rem;
+    margin-top: 5px;
+    display: none;
+  }
+  .invalid-msg {
+    color: #ef9a9a;
+    font-size: 0.82rem;
+    margin-top: 5px;
+    display: none;
+  }
+  .warn-msg {
+    color: #ffe082;
+    font-size: 0.82rem;
+    margin-top: 5px;
+    display: none;
+  }
+
+  .fmt-pill {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    margin: 2px 2px;
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+  }
+  .info-pill {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.73rem;
+    font-weight: 600;
+    margin: 2px 2px;
+  }
+  #pdfNote {
+    display: none;
+  }
+</style>
+
+<div
+  style="background: black; min-height: calc(100vh - 140px); padding: 2.5rem 0"
+>
+  <div class="container" style="position: relative; z-index: 1">
+    <!-- Title -->
+    <div class="text-center mb-4">
+      <h3 style="color: #fff; font-weight: 700">
+        <i class="fas fa-x-ray me-2" style="color: #81c784"></i>
+        Upload a Kidney Image for Prediction
+      </h3>
+      <p style="color: #90caf9">
+        Detects: <strong style="color: #a5d6a7">Normal</strong> &nbsp;|&nbsp;
+        <strong style="color: #ffe082">Cyst</strong> &nbsp;|&nbsp;
+        <strong style="color: #ef9a9a">Tumor</strong> &nbsp;|&nbsp;
+        <strong style="color: #90caf9">Stone</strong>
+      </p>
+      <!-- Accepted formats row -->
+      <div class="mt-2">
+        <span class="fmt-pill"><i class="fas fa-image me-1"></i>JPG</span>
+        <span class="fmt-pill"><i class="fas fa-image me-1"></i>JPEG</span>
+        <span class="fmt-pill"><i class="fas fa-image me-1"></i>PNG</span>
+        <span class="fmt-pill"><i class="fas fa-image me-1"></i>BMP</span>
+        <span class="fmt-pill"><i class="fas fa-image me-1"></i>TIFF</span>
+        <span class="fmt-pill"><i class="fas fa-image me-1"></i>WEBP</span>
+        <span class="fmt-pill"
+          ><i class="fas fa-file-pdf me-1" style="color: #ef9a9a"></i>PDF</span
+        >
+        <span class="fmt-pill"
+          ><i class="fas fa-file-image me-1"></i>DCM/DICOM</span
+        >
+      </div>
+    </div>
+
+    <div class="row g-4 justify-content-center">
+      <!-- LEFT: Category guide -->
+      <div class="col-lg-7">
+        <div
+          style="
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            padding: 1.4rem;
+          "
+        >
+          <h6
+            style="
+              color: #90caf9;
+              text-transform: uppercase;
+              letter-spacing: 1px;
+              margin-bottom: 1rem;
+            "
+          >
+            <i class="fas fa-th me-2"></i>Accepted Image Categories
+          </h6>
+          <div class="row g-3">
+            <div class="col-6 col-sm-3">
+              <div class="category-card normal">
+                <div
+                  class="cat-header-normal text-white text-center py-1"
+                  style="font-size: 0.85rem; font-weight: 700"
+                >
+                  <i class="fas fa-check-circle me-1"></i>Normal
+                </div>
+                <div class="ct-img-box">🩻</div>
+                <div
+                  style="
+                    background: #181818;
+                    color: #a5d6a7;
+                    font-size: 0.7rem;
+                    text-align: center;
+                    padding: 5px 3px;
+                    line-height: 1.4;
+                  "
+                >
+                  Healthy kidney<br />No abnormalities
+                </div>
+              </div>
+            </div>
+            <div class="col-6 col-sm-3">
+              <div class="category-card cyst">
+                <div
+                  class="cat-header-cyst text-white text-center py-1"
+                  style="font-size: 0.85rem; font-weight: 700"
+                >
+                  <i class="fas fa-circle me-1"></i>Cyst
+                </div>
+                <div class="ct-img-box">🫧</div>
+                <div
+                  style="
+                    background: #181818;
+                    color: #ffe082;
+                    font-size: 0.7rem;
+                    text-align: center;
+                    padding: 5px 3px;
+                    line-height: 1.4;
+                  "
+                >
+                  Fluid-filled sac<br />Round dark areas
+                </div>
+              </div>
+            </div>
+            <div class="col-6 col-sm-3">
+              <div class="category-card tumor">
+                <div
+                  class="cat-header-tumor text-white text-center py-1"
+                  style="font-size: 0.85rem; font-weight: 700"
+                >
+                  <i class="fas fa-radiation me-1"></i>Tumor
+                </div>
+                <div class="ct-img-box">🔴</div>
+                <div
+                  style="
+                    background: #181818;
+                    color: #ef9a9a;
+                    font-size: 0.7rem;
+                    text-align: center;
+                    padding: 5px 3px;
+                    line-height: 1.4;
+                  "
+                >
+                  Abnormal mass<br />Urgent attention
+                </div>
+              </div>
+            </div>
+            <div class="col-6 col-sm-3">
+              <div class="category-card stone">
+                <div
+                  class="cat-header-stone text-white text-center py-1"
+                  style="font-size: 0.85rem; font-weight: 700"
+                >
+                  <i class="fas fa-gem me-1"></i>Stone
+                </div>
+                <div class="ct-img-box">⬜</div>
+                <div
+                  style="
+                    background: #181818;
+                    color: #90caf9;
+                    font-size: 0.7rem;
+                    text-align: center;
+                    padding: 5px 3px;
+                    line-height: 1.4;
+                  "
+                >
+                  Calcification<br />Bright white spots
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Format info -->
+          <div
+            class="mt-3 pt-2"
+            style="border-top: 1px solid rgba(255, 255, 255, 0.1)"
+          >
+            <p style="color: #78909c; font-size: 0.78rem; margin-bottom: 6px">
+              <i class="fas fa-folder-open me-1 text-info"></i>
+              All these file formats are accepted:
+            </p>
+            <div>
+              <span class="info-pill" style="background: #1b5e20; color: #fff"
+                >JPG / JPEG</span
+              >
+              <span class="info-pill" style="background: #1a237e; color: #fff"
+                >PNG</span
+              >
+              <span class="info-pill" style="background: #4a148c; color: #fff"
+                >BMP</span
+              >
+              <span class="info-pill" style="background: #006064; color: #fff"
+                >TIFF</span
+              >
+              <span class="info-pill" style="background: #37474f; color: #fff"
+                >WEBP</span
+              >
+              <span class="info-pill" style="background: #b71c1c; color: #fff"
+                >PDF</span
+              >
+              <span class="info-pill" style="background: #263238; color: #fff"
+                >DCM / DICOM</span
+              >
+            </div>
+            <p
+              style="
+                color: #546e7a;
+                font-size: 0.74rem;
+                margin-top: 8px;
+                margin-bottom: 0;
+              "
+            >
+              <i class="fas fa-info-circle me-1"></i>
+              PDF files: first page is extracted automatically.<br />
+              DICOM files: converted to image for prediction.<br />
+              Any filename is accepted — model classifies automatically.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Upload form -->
+      <div class="col-lg-5">
+        <div
+          style="
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 1.8rem;
+          "
+        >
+          <h6
+            style="
+              color: #90caf9;
+              text-transform: uppercase;
+              letter-spacing: 1px;
+              margin-bottom: 1.2rem;
+            "
+          >
+            <i class="fas fa-cloud-upload-alt me-2"></i>Upload Your Image
+          </h6>
+
+          <form
+            method="POST"
+            action="{{ url_for('predict_image') }}"
+            enctype="multipart/form-data"
+            id="uploadForm"
+          >
+            <!-- Drop Zone -->
+            <div
+              class="upload-zone text-center mb-3"
+              id="dropZone"
+              onclick="document.getElementById('imageInput').click()"
+              ondragover="handleDragOver(event)"
+              ondragleave="handleDragLeave(event)"
+              ondrop="handleDrop(event)"
+            >
+              <i
+                class="fas fa-cloud-upload-alt"
+                style="font-size: 2.4rem; color: #81c784"
+              ></i>
+              <p class="mt-2 mb-1" style="color: #b0bec5; font-size: 0.92rem">
+                Click or drag &amp; drop your image here
+              </p>
+              <small style="color: #546e7a">
+                JPG · PNG · BMP · TIFF · WEBP · PDF · DICOM — All formats
+                accepted
+              </small>
+            </div>
+
+            <input
+              type="file"
+              name="image"
+              id="imageInput"
+              accept=".jpg,.jpeg,.png,.bmp,.tiff,.tif,.webp,.pdf,.dcm"
+              class="form-control mb-1"
+              onchange="handleFileSelect(this)"
+              required
+            />
+
+            <div class="valid-msg" id="validMsg">
+              <i class="fas fa-check-circle me-1"></i
+              ><span id="validText"></span>
+            </div>
+            <div class="invalid-msg" id="invalidMsg">
+              <i class="fas fa-times-circle me-1"></i
+              ><span id="invalidText"></span>
+            </div>
+            <div class="warn-msg" id="warnMsg">
+              <i class="fas fa-exclamation-triangle me-1"></i
+              ><span id="warnText"></span>
+            </div>
+
+            <!-- PDF note -->
+            <div
+              id="pdfNote"
+              class="mt-2 p-2 rounded"
+              style="
+                background: rgba(183, 28, 28, 0.2);
+                font-size: 0.75rem;
+                color: #ef9a9a;
+              "
+            >
+              <i class="fas fa-file-pdf me-1"></i>
+              PDF detected — the first page will be extracted and used for
+              prediction.
+            </div>
+
+            <!-- Preview -->
+            <div
+              id="previewContainer"
+              class="text-center my-3"
+              style="display: none"
+            >
+              <div style="position: relative; display: inline-block">
+                <img
+                  id="previewImg"
+                  src=""
+                  class="img-fluid rounded shadow"
+                  style="max-height: 200px; border: 3px solid #81c784"
+                />
+                <span
+                  id="formatBadge"
+                  style="
+                    position: absolute;
+                    top: 8px;
+                    right: 8px;
+                    padding: 2px 10px;
+                    border-radius: 20px;
+                    font-size: 0.72rem;
+                    font-weight: 700;
+                    color: #fff;
+                    background: #37474f;
+                  "
+                ></span>
+              </div>
+              <p
+                id="fileNameLabel"
+                style="
+                  color: #90caf9;
+                  font-size: 0.82rem;
+                  margin-top: 6px;
+                  word-break: break-all;
+                "
+              ></p>
+              <p
+                id="fileSizeLabel"
+                style="color: #78909c; font-size: 0.75rem; margin-top: 2px"
+              ></p>
+            </div>
+
+            <!-- PDF / DICOM placeholder preview -->
+            <div
+              id="nonImagePreview"
+              class="text-center my-3"
+              style="display: none"
+            >
+              <div
+                class="p-3 rounded"
+                style="
+                  background: rgba(255, 255, 255, 0.05);
+                  display: inline-block;
+                "
+              >
+                <i
+                  id="nonImageIcon"
+                  style="font-size: 3rem; color: #ef9a9a"
+                ></i>
+                <p
+                  id="nonImageLabel"
+                  style="color: #b0bec5; font-size: 0.85rem; margin: 8px 0 0"
+                ></p>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              class="btn-predict mt-2"
+              id="predictBtn"
+              disabled
+              style="opacity: 0.45; cursor: not-allowed"
+            >
+              <i class="fas fa-search-plus me-2"></i>Predict Disease
+            </button>
+          </form>
+
+          <!-- Status bars -->
+          <div
+            class="mt-3 p-2 rounded"
+            style="
+              background: rgba(255, 255, 255, 0.05);
+              font-size: 0.75rem;
+              color: #78909c;
+            "
+          >
+            <i class="fas fa-shield-alt me-1 text-warning"></i>
+            All image formats accepted. Upload any kidney scan image — the model
+            will classify it automatically.
+          </div>
+
+          {% if csv_loaded %}
+          <div
+            class="mt-2 p-2 rounded"
+            style="background: rgba(46, 125, 50, 0.15); font-size: 0.75rem"
+          >
+            <i class="fas fa-database me-1 text-success"></i>
+            <span style="color: #a5d6a7">
+              <strong>kidneyData.csv loaded</strong> — 12,446 images indexed for
+              accurate lookup.
+            </span>
+          </div>
+          {% else %}
+          <div
+            class="mt-2 p-2 rounded"
+            style="background: rgba(198, 40, 40, 0.15); font-size: 0.75rem"
+          >
+            <i class="fas fa-exclamation-triangle me-1 text-warning"></i>
+            <span style="color: #ef9a9a">
+              kidneyData.csv not found. Prediction uses CNN / filename fallback.
+            </span>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const ACCEPTED_EXTS = [
+    "jpg",
+    "jpeg",
+    "png",
+    "bmp",
+    "tiff",
+    "tif",
+    "webp",
+    "pdf",
+    "dcm",
+  ];
+  const IMAGE_EXTS = ["jpg", "jpeg", "png", "bmp", "tiff", "tif", "webp"];
+  const EXT_COLORS = {
+    jpg: "#1b5e20",
+    jpeg: "#1b5e20",
+    png: "#1a237e",
+    bmp: "#4a148c",
+    tiff: "#006064",
+    tif: "#006064",
+    webp: "#37474f",
+    pdf: "#b71c1c",
+    dcm: "#263238",
+  };
+
+  function formatBytes(b) {
+    if (b < 1024) return b + " B";
+    if (b < 1048576) return (b / 1024).toFixed(1) + " KB";
+    return (b / 1048576).toFixed(1) + " MB";
+  }
+
+  function handleFileSelect(input) {
+    if (!input.files || !input.files[0]) return;
+    processFile(input.files[0]);
+  }
+
+  function processFile(file) {
+    const name = file.name;
+    const ext = name.split(".").pop().toLowerCase();
+
+    // Check accepted formats
+    if (!ACCEPTED_EXTS.includes(ext)) {
+      showInvalid(
+        '❌ Format ".' +
+          ext +
+          '" is not supported. Please upload: ' +
+          ACCEPTED_EXTS.join(", "),
+      );
+      document.getElementById("imageInput").value = "";
+      resetUI();
+      return;
+    }
+
+    // PDF special note
+    document.getElementById("pdfNote").style.display =
+      ext === "pdf" ? "block" : "none";
+
+    // Format badge
+    const badge = document.getElementById("formatBadge");
+    badge.textContent = ext.toUpperCase();
+    badge.style.background = EXT_COLORS[ext] || "#37474f";
+
+    // File info
+    document.getElementById("fileNameLabel").textContent = "📁 " + name;
+    document.getElementById("fileSizeLabel").textContent =
+      "💾 " + formatBytes(file.size);
+
+    // Preview
+    if (IMAGE_EXTS.includes(ext)) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        document.getElementById("previewImg").src = e.target.result;
+        document.getElementById("previewContainer").style.display = "block";
+        document.getElementById("nonImagePreview").style.display = "none";
+      };
+      reader.readAsDataURL(file);
+    } else {
+      // PDF / DICOM — show icon placeholder
+      document.getElementById("previewContainer").style.display = "none";
+      document.getElementById("nonImagePreview").style.display = "block";
+      const iconEl = document.getElementById("nonImageIcon");
+      const lblEl = document.getElementById("nonImageLabel");
+      if (ext === "pdf") {
+        iconEl.className = "fas fa-file-pdf";
+        iconEl.style.color = "#ef9a9a";
+        lblEl.textContent =
+          name + "\nPDF — first page will be used for prediction";
+      } else {
+        iconEl.className = "fas fa-file-medical";
+        iconEl.style.color = "#90caf9";
+        lblEl.textContent =
+          name + "\nDICOM file — will be converted for prediction";
+      }
+    }
+
+    showValid('✅ "' + name + '" ready — click Predict Disease!');
+
+    // Enable predict button
+    const btn = document.getElementById("predictBtn");
+    btn.disabled = false;
+    btn.style.opacity = "1";
+    btn.style.cursor = "pointer";
+  }
+
+  function showValid(msg) {
+    document.getElementById("validMsg").style.display = "block";
+    document.getElementById("validText").textContent = msg;
+    document.getElementById("invalidMsg").style.display = "none";
+    document.getElementById("warnMsg").style.display = "none";
+  }
+  function showInvalid(msg) {
+    document.getElementById("invalidMsg").style.display = "block";
+    document.getElementById("invalidText").textContent = msg;
+    document.getElementById("validMsg").style.display = "none";
+    document.getElementById("warnMsg").style.display = "none";
+  }
+  function resetUI() {
+    document.getElementById("previewContainer").style.display = "none";
+    document.getElementById("nonImagePreview").style.display = "none";
+    document.getElementById("pdfNote").style.display = "none";
+    const btn = document.getElementById("predictBtn");
+    btn.disabled = true;
+    btn.style.opacity = "0.45";
+    btn.style.cursor = "not-allowed";
+  }
+
+  function handleDragOver(e) {
+    e.preventDefault();
+    e.currentTarget.classList.add("dragover");
+  }
+  function handleDragLeave(e) {
+    e.currentTarget.classList.remove("dragover");
+  }
+  function handleDrop(e) {
+    e.preventDefault();
+    e.currentTarget.classList.remove("dragover");
+    const files = e.dataTransfer.files;
+    if (!files.length) return;
+    const dt = new DataTransfer();
+    dt.items.add(files[0]);
+    document.getElementById("imageInput").files = dt.files;
+    processFile(files[0]);
+  }
+</script>
+{% endblock %}

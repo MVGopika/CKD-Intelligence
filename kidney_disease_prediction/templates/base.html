@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kidney Disease Prediction</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      body {
+        font-family: "Segoe UI", sans-serif;
+        background: ;
+      }
+      .navbar-custom {
+        background: #1a1a2e;
+        padding: 10px 20px;
+      }
+      .navbar-custom a {
+        color: #4fc3f7 !important;
+        margin-right: 20px;
+        font-weight: 500;
+        text-decoration: none;
+        font-size: 15px;
+      }
+      .navbar-custom a:hover,
+      .navbar-custom a.active {
+        color: #ffffff !important;
+      }
+      .site-header {
+        background: linear-gradient(135deg, #e8f5e9, #e3f2fd);
+        padding: 12px 0;
+        text-align: center;
+        border-bottom: 3px solid #1565c0;
+      }
+      .site-header h1 {
+        color: #c62828;
+        font-weight: 700;
+        font-size: 2rem;
+        margin: 0;
+      }
+      .hero-section {
+        background: url("/static/images/bg_kidney.jpg") center/cover no-repeat;
+        min-height: calc(100vh - 140px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+      }
+      .hero-section::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: rgba(255, 255, 255, 0.15);
+      }
+      .card-glass {
+        background: rgba(40, 40, 60, 0.82);
+        backdrop-filter: blur(8px);
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: #fff;
+        padding: 2rem 2.5rem;
+        position: relative;
+        z-index: 1;
+      }
+      .card-glass h3 {
+        color: #fff;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+      }
+      .btn-submit {
+        background: #1565c0;
+        color: #fff;
+        border: none;
+        width: 100%;
+        padding: 10px;
+        border-radius: 6px;
+        font-size: 16px;
+        font-weight: 600;
+      }
+      .btn-submit:hover {
+        background: #0d47a1;
+        color: #fff;
+      }
+      .btn-predict {
+        background: #2e7d32;
+        color: #fff;
+        border: none;
+        width: 100%;
+        padding: 10px;
+        border-radius: 6px;
+        font-size: 16px;
+        font-weight: 600;
+      }
+      .btn-predict:hover {
+        background: #1b5e20;
+        color: #fff;
+      }
+      .result-card {
+        background: rgba(255, 255, 255, 0.92);
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+      }
+      .badge-ckd {
+        background: #c62828;
+        font-size: 1.1rem;
+        padding: 8px 20px;
+        border-radius: 20px;
+      }
+      .badge-normal {
+        background: #2e7d32;
+        font-size: 1.1rem;
+        padding: 8px 20px;
+        border-radius: 20px;
+      }
+      .flash-messages {
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        z-index: 9999;
+        min-width: 300px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="flash-messages">
+      {% with messages = get_flashed_messages(with_categories=true) %} {% for
+      category, message in messages %}
+      <div
+        class="alert alert-{{ category }} alert-dismissible fade show"
+        role="alert"
+      >
+        {{ message }}
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="alert"
+        ></button>
+      </div>
+      {% endfor %} {% endwith %}
+    </div>
+
+    {% block content %}{% endblock %}
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>

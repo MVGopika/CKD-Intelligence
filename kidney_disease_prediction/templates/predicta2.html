@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="hero-section" style="background: linear-gradient(135deg, #b3e5fc 0%, #e1f5fe 50%, #e8f5e9 100%); min-height: calc(100vh - 140px);">
+    <div class="container text-center" style="position:relative; z-index:1;">
+        <div class="p-4 rounded-3 d-inline-block" style="background:rgba(255,255,255,0.75); backdrop-filter:blur(10px);">
+            <h1 style="color:#1565c0; font-size:3.5rem; font-weight:700;">Hello User</h1>
+            <p class="lead text-muted">Welcome to Kidney Disease Prediction System</p>
+            <p class="text-muted">Logged in as: <strong style="color:#1565c0;">{{ user }}</strong></p>
+            <div class="mt-4">
+                <a href="{{ url_for('features_based') }}" class="btn btn-primary btn-lg me-3">
+                    <i class="fas fa-table me-2"></i>Features Based
+                </a>
+                <a href="{{ url_for('image_based') }}" class="btn btn-success btn-lg">
+                    <i class="fas fa-image me-2"></i>Image Based
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

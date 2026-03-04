@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="hero-section" style="background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); min-height: calc(100vh - 70px);">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-5">
+                <div class="card-glass text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-user-plus" style="font-size:3rem; color:#81c784;"></i>
+                    </div>
+                    <h3>Create Account</h3>
+                    <p style="color:#b0bec5;">Kidney Disease Prediction System</p>
+                    
+                    <form method="POST" action="{{ url_for('register') }}">
+                        <div class="mb-3 text-start">
+                            <label class="form-label">Username</label>
+                            <input type="text" name="username" class="form-control" placeholder="Enter username" required>
+                        </div>
+                        <div class="mb-3 text-start">
+                            <label class="form-label">Email</label>
+                            <input type="email" name="email" class="form-control" placeholder="Enter email">
+                        </div>
+                        <div class="mb-3 text-start">
+                            <label class="form-label">Password</label>
+                            <input type="password" name="password" class="form-control" placeholder="Create password" required>
+                        </div>
+                        <button type="submit" class="btn-predict mb-3">
+                            <i class="fas fa-user-plus me-2"></i>Register
+                        </button>
+                    </form>
+                    
+                    <p style="color:#90a4ae;">Already have an account? 
+                        <a href="{{ url_for('login') }}" style="color:#81c784;">Login</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

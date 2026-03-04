@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="hero-section" style="background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); min-height: calc(100vh - 70px);">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-5">
+                <div class="card-glass text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-user-md" style="font-size:3rem; color:#4fc3f7;"></i>
+                    </div>
+                    <h3>Welcome Back</h3>
+                    <p style="color:#b0bec5;">Kidney Disease Prediction System</p>
+                    
+                    <form method="POST" action="{{ url_for('login') }}">
+                        <div class="mb-3 text-start">
+                            <label class="form-label">Username</label>
+                            <input type="text" name="username" class="form-control" placeholder="Enter username" required>
+                        </div>
+                        <div class="mb-3 text-start">
+                            <label class="form-label">Password</label>
+                            <input type="password" name="password" class="form-control" placeholder="Enter password" required>
+                        </div>
+                        <button type="submit" class="btn-submit mb-3">
+                            <i class="fas fa-sign-in-alt me-2"></i>Login
+                        </button>
+                    </form>
+                    
+                    <p style="color:#90a4ae;">Don't have an account? 
+                        <a href="{{ url_for('register') }}" style="color:#4fc3f7;">Register</a>
+                    </p>
+                    
+                    <hr style="border-color:#4fc3f7; opacity:0.3;">
+                    <small style="color:#78909c;">
+                        Demo credentials: <strong style="color:#4fc3f7;">admin / admin123</strong>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

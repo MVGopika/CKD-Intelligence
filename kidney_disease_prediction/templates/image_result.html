@@ -1,0 +1,131 @@
+{% extends 'base.html' %} {% block content %}
+<div
+  style="
+    background: linear-gradient(135deg, #e8f5e9, #e3f2fd);
+    min-height: calc(100vh - 140px);
+    padding: 3rem 0;
+  "
+>
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="result-card text-center">
+          <h3 class="mb-4" style="color: #1565c0">
+            <i class="fas fa-microscope me-2"></i>Disease Prediction output
+          </h3>
+
+          <!-- Result -->
+          <div class="mb-4">
+            {% if prediction == 'Normal' %}
+            <p class="text-success fw-bold fs-5">{{ prediction }}</p>
+            {% elif prediction == 'Tumor' %}
+            <p class="text-danger fw-bold fs-5">{{ prediction }}</p>
+            {% elif prediction == 'Cyst' %}
+            <p class="text-warning fw-bold fs-5">{{ prediction }}</p>
+            {% else %}
+            <p class="text-info fw-bold fs-5">{{ prediction }}</p>
+            {% endif %}
+
+            <!-- Uploaded Image -->
+            {% if image_data %}
+            <img
+              src="{{ image_data }}"
+              class="img-fluid rounded shadow"
+              style="max-height: 250px; border: 3px solid #1565c0"
+            />
+            {% endif %}
+
+            <!-- Prediction Label Badge -->
+            <div class="mt-3">
+              {% if prediction == 'Normal' %}
+              <span class="badge badge-normal text-white fs-5 p-3">
+                <i class="fas fa-check-circle me-2"></i>{{ prediction }}
+              </span>
+              {% elif prediction == 'Tumor' %}
+              <span class="badge bg-danger text-white fs-5 p-3">
+                <i class="fas fa-radiation me-2"></i>{{ prediction }} Detected
+              </span>
+              {% elif prediction == 'Cyst' %}
+              <span class="badge bg-warning text-dark fs-5 p-3">
+                <i class="fas fa-circle me-2"></i>{{ prediction }} Detected
+              </span>
+              {% else %}
+              <span class="badge bg-info text-white fs-5 p-3">
+                <i class="fas fa-gem me-2"></i>{{ prediction }} Detected
+              </span>
+              {% endif %}
+            </div>
+
+            <!-- Filename & Method -->
+            {% if filename %}
+            <p class="text-muted small mt-2 mb-1">
+              <i class="fas fa-file-image me-1"></i><strong>File:</strong> {{
+              filename }} {% if file_format %}
+              <span
+                class="badge ms-1"
+                style="font-size:0.7rem;background:
+                                  {% if file_format in ['JPG','JPEG'] %}#1b5e20
+                                  {% elif file_format == 'PNG' %}#1a237e
+                                  {% elif file_format == 'PDF' %}#b71c1c
+                                  {% elif file_format in ['DCM','DICOM'] %}#263238
+                                  {% elif file_format == 'BMP' %}#4a148c
+                                  {% elif file_format in ['TIFF','TIF'] %}#006064
+                                  {% elif file_format == 'WEBP' %}#37474f
+                                  {% else %}#37474f{% endif %};"
+              >
+                {{ file_format }}
+              </span>
+              {% endif %}
+            </p>
+            {% endif %} {% if method %}
+            <p class="mb-2">
+              <span
+                class="badge {% if method == 'Dataset Lookup' %}bg-primary {% elif method == 'CNN Model' %}bg-warning text-dark {% elif method == 'Filename Pattern' %}bg-secondary {% else %}bg-dark{% endif %}"
+                style="font-size: 0.78rem; padding: 4px 10px"
+              >
+                <i
+                  class="fas {% if method == 'Dataset Lookup' %}fa-database {% elif method == 'CNN Model' %}fa-brain {% else %}fa-tag{% endif %} me-1"
+                ></i>
+                Predicted via: {{ method }}
+              </span>
+            </p>
+            {% endif %}
+
+            <!-- Confidence -->
+            <div class="mt-2 text-start">
+              <strong>Confidence:</strong>
+              <div class="progress mt-2" style="height: 22px">
+                <div
+                  class="progress-bar {% if prediction == 'Normal' %}bg-success {% elif prediction == 'Tumor' %}bg-danger {% elif prediction == 'Cyst' %}bg-warning {% else %}bg-info{% endif %}"
+                  style="width: {{ confidence }}%;"
+                >
+                  {{ confidence }}%
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recommendations -->
+          <div
+            class="p-4 rounded-3 text-start mb-4"
+            style="background:{% if prediction == 'Normal' %}#e8f5e9{% elif prediction == 'Tumor' %}#ffebee{% else %}#fff8e1{% endif %};
+                                border-left: 5px solid {% if prediction == 'Normal' %}#2e7d32{% elif prediction == 'Tumor' %}#c62828{% else %}#f57f17{% endif %};"
+          >
+            <h5><i class="fas fa-notes-medical me-2"></i>Recommendations:</h5>
+            <p class="mb-0">{{ recommendation }}</p>
+          </div>
+
+          <div class="text-center mt-4">
+            <a
+              href="{{ url_for('image_based') }}"
+              class="btn btn-outline-success me-3"
+            >
+              <i class="fas fa-redo me-2"></i>New Prediction
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
