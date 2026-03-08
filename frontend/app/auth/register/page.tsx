@@ -41,8 +41,14 @@ export default function RegisterPage() {
       );
       if (formData.role_name === "patient") {
         toast.success("Patient Registered successfully");
+              setTimeout(() => {
+          window.location.reload();
+        }, 2000);
       } else {
         toast.success("Doctor Registered successfully");
+              setTimeout(() => {
+          window.location.reload();
+        }, 2000);
       }
     } catch (err: any) {
       setError(
